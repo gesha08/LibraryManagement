@@ -1,0 +1,59 @@
+@model Library.Web.ViewModels.Author.AuthorDetailsViewModel
+
+@{
+    ViewData["Title"] = "Author Details";
+}
+
+<h1>Author Details</h1>
+
+<div>
+    <h4>Author</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">First Name</dt>
+        <dd class="col-sm-10">@Model.FirstName</dd>
+
+        <dt class="col-sm-2">Last Name</dt>
+        <dd class="col-sm-10">@Model.LastName</dd>
+
+        <dt class="col-sm-2">Birth Date</dt>
+        <dd class="col-sm-10">@Model.BirthDate.ToShortDateString()</dd>
+
+        <dt class="col-sm-2">Biography</dt>
+        <dd class="col-sm-10">@Model.Biography</dd>
+    </dl>
+</div>
+
+<div>
+    <h4>Books</h4>
+    <hr />
+    @if (Model.Books != null && Model.Books.Count > 0)
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Publication Year</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var book in Model.Books)
+                {
+                    <tr>
+                        <td>@book.Title</td>
+                        <td>@book.PublicationYear</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No books found.</p>
+    }
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>

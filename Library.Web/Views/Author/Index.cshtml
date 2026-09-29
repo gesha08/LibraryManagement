@@ -1,0 +1,39 @@
+@model IEnumerable<Library.Web.ViewModels.Author.AuthorIndexViewModel>
+
+@{
+    ViewData["Title"] = "Authors";
+}
+
+<h1>Authors</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Author</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Birth Date</th>
+            <th>Books Count</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var author in Model)
+        {
+            <tr>
+                <td>@author.FirstName</td>
+                <td>@author.LastName</td>
+                <td>@author.BirthDate.ToShortDateString()</td>
+                <td>@author.BooksCount</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@author.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@author.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@author.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
