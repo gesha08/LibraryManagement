@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -27,5 +28,7 @@ namespace Library.Data.Entities
 
         [ForeignKey("AuthorId")]
         public Author Author { get; set; }
+
+        public List<BookReader> BookReaders { get; set; }
     }
 }

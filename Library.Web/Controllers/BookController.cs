@@ -43,12 +43,21 @@ namespace Library.Web.Controllers
         {
             var book = await context.Books
                 .Include(b => b.Author)
+                .Include(b => b.BookReaders)
+                    .ThenInclude(br => br.Reader)
                 .FirstOrDefaultAsync(b => b.Id == id);
 
             if (book == null)
             {
                 return NotFound();
             }
+
+            var currentBorrow = book.BookReaders.FirstOrDefault(br => br.ReturnedDate == null);
+
+            var availableReaders = await context.Readers
+                .Where(r => !context.BookReaders.Any(br => br.ReaderId == r.Id && br.ReturnedDate == null))
+                .Select(r => new { r.Id, FullName = r.FirstName + " " + r.LastName })
+                .ToListAsync();
 
             var model = new BookDetailsViewModel
             {
@@ -59,7 +68,12 @@ namespace Library.Web.Controllers
                 Pages = book.Pages,
                 PublicationYear = book.PublicationYear,
                 AuthorName = book.Author.FirstName + " " + book.Author.LastName,
-                AuthorBirthDate = book.Author.BirthDate
+                AuthorBirthDate = book.Author.BirthDate,
+                IsBorrowed = currentBorrow != null,
+                CurrentBorrowerName = currentBorrow != null ? currentBorrow.Reader.FirstName + " " + currentBorrow.Reader.LastName : null,
+                BorrowedDate = currentBorrow?.BorrowedDate,
+                CurrentBorrowerId = currentBorrow?.ReaderId,
+                AvailableReaders = new SelectList(availableReaders, "Id", "FullName")
             };
 
             return View(model);
@@ -203,6 +217,98 @@ namespace Library.Web.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // Borrow a book
+        public async Task<IActionResult> Borrow(int id)
+        {
+            var book = await context.Books
+                .Include(b => b.BookReaders)
+                    .ThenInclude(br => br.Reader)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+            if (book.BookReaders.Any(br => br.ReturnedDate == null))
+            {
+                TempData["Error"] = "This book is already borrowed.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var availableReaders = await context.Readers
+                .Where(r => !context.BookReaders.Any(br => br.ReaderId == r.Id && br.ReturnedDate == null))
+                .Select(r => new { r.Id, FullName = r.FirstName + " " + r.LastName })
+                .ToListAsync();
+
+            ViewBag.Book = book;
+            ViewBag.Readers = new SelectList(availableReaders, "Id", "FullName");
+
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Borrow(int id, int readerId)
+        {
+            var book = await context.Books
+                .Include(b => b.BookReaders)
+                .FirstOrDefaultAsync(b => b.Id == id);
+            var reader = await context.Readers.FindAsync(readerId);
+
+            if (book == null || reader == null)
+            {
+                return NotFound();
+            }
+
+            if (book.BookReaders.Any(br => br.ReturnedDate == null))
+            {
+                TempData["Error"] = "This book is already borrowed.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            var borrow = new Library.Data.Entities.BookReader
+            {
+                BookId = book.Id,
+                ReaderId = reader.Id,
+                BorrowedDate = DateTime.Now
+            };
+
+            context.BookReaders.Add(borrow);
+            await context.SaveChangesAsync();
+
+            TempData["Success"] = $"Book '{book.Title}' borrowed by {reader.FirstName} {reader.LastName}.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        // Return a book
+        [HttpPost]
+        public async Task<IActionResult> Return(int id)
+        {
+            var book = await context.Books
+                .Include(b => b.BookReaders)
+                    .ThenInclude(br => br.Reader)
+                .FirstOrDefaultAsync(b => b.Id == id);
+
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+            var currentBorrow = book.BookReaders.FirstOrDefault(br => br.ReturnedDate == null);
+
+            if (currentBorrow == null)
+            {
+                TempData["Error"] = "This book is not currently borrowed.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            currentBorrow.ReturnedDate = DateTime.Now;
+            await context.SaveChangesAsync();
+
+            TempData["Success"] = $"Book '{book.Title}' returned by {currentBorrow.Reader.FirstName} {currentBorrow.Reader.LastName}.";
+            return RedirectToAction(nameof(Details), new { id });
         }
     }
 }

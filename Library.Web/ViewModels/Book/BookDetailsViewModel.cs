@@ -1,3 +1,6 @@
+using System.Collections.Generic;
+using Microsoft.AspNetCore.Mvc.Rendering;
+
 namespace Library.Web.ViewModels.Book
 {
     public class BookDetailsViewModel
@@ -10,5 +13,12 @@ namespace Library.Web.ViewModels.Book
         public int PublicationYear { get; set; }
         public string AuthorName { get; set; }
         public DateTime AuthorBirthDate { get; set; }
+        
+        // Borrow/Return info
+        public bool IsBorrowed { get; set; }
+        public string CurrentBorrowerName { get; set; }
+        public DateTime? BorrowedDate { get; set; }
+        public int? CurrentBorrowerId { get; set; }
+        public SelectList AvailableReaders { get; set; }
     }
 }

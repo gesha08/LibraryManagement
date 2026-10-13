@@ -6,6 +6,16 @@
 
 <h1>Book Details</h1>
 
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">@TempData["Error"]</div>
+}
+
 <div>
     <h4>Book</h4>
     <hr />
@@ -34,6 +44,35 @@
 </div>
 
 <div>
+    <h4>Borrow Status</h4>
+    <hr />
+    @if (Model.IsBorrowed)
+    {
+        <div class="alert alert-warning">
+            <strong>Currently Borrowed</strong><br />
+            <strong>Borrower:</strong> @Model.CurrentBorrowerName<br />
+            <strong>Borrowed Date:</strong> @Model.BorrowedDate?.ToShortDateString()
+        </div>
+        <form asp-action="Return" method="post">
+            <input type="hidden" name="id" value="@Model.Id" />
+            <button type="submit" class="btn btn-success" onclick="return confirm('Mark this book as returned?')">Return Book</button>
+        </form>
+    }
+    else
+    {
+        <div class="alert alert-success">Available</div>
+        @if (Model.AvailableReaders != null && Model.AvailableReaders.Count() > 0)
+        {
+            <a asp-action="Borrow" asp-route-id="@Model.Id" class="btn btn-primary">Borrow Book</a>
+        }
+        else
+        {
+            <span class="text-muted">No available readers (all readers have borrowed books)</span>
+        }
+    }
+</div>
+
+<div class="mt-3">
     <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-warning">Edit</a>
     <a asp-action="Index" class="btn btn-secondary">Back to List</a>
 </div>

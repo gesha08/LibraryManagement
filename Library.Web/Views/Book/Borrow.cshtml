@@ -1,0 +1,38 @@
+@model Library.Data.Entities.Book
+
+@{
+    ViewData["Title"] = "Borrow Book";
+}
+
+<h1>Borrow Book</h1>
+
+<h4>@ViewBag.Book.Title</h4>
+<hr />
+
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Borrow" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
+            <input type="hidden" name="id" value="@ViewBag.Book.Id" />
+
+            <div class="form-group">
+                <label class="control-label">Select Reader</label>
+                <select name="readerId" asp-items="ViewBag.Readers" class="form-control">
+                    <option value="">Select Reader</option>
+                </select>
+                <span class="text-danger"></span>
+            </div>
+
+            <br />
+            <div class="form-group">
+                <input type="submit" value="Borrow" class="btn btn-primary" />
+                <a asp-action="Details" asp-route-id="@ViewBag.Book.Id" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
+}

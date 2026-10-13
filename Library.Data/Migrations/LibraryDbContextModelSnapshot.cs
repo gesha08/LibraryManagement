@@ -92,6 +92,63 @@ namespace Library.Data.Migrations
                     b.ToTable("Books");
                 });
 
+            modelBuilder.Entity("Library.Data.Entities.BookReader", b =>
+                {
+                    b.Property<int>("BookId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ReaderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("BorrowedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("ReturnedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("BookId", "ReaderId");
+
+                    b.HasIndex("ReaderId");
+
+                    b.ToTable("BookReaders");
+                });
+
+            modelBuilder.Entity("Library.Data.Entities.Reader", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("RegistrationDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Readers");
+                });
+
             modelBuilder.Entity("Library.Data.Entities.Book", b =>
                 {
                     b.HasOne("Library.Data.Entities.Author", "Author")
@@ -103,9 +160,38 @@ namespace Library.Data.Migrations
                     b.Navigation("Author");
                 });
 
+            modelBuilder.Entity("Library.Data.Entities.BookReader", b =>
+                {
+                    b.HasOne("Library.Data.Entities.Book", "Book")
+                        .WithMany("BookReaders")
+                        .HasForeignKey("BookId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Library.Data.Entities.Reader", "Reader")
+                        .WithMany("BookReaders")
+                        .HasForeignKey("ReaderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Book");
+
+                    b.Navigation("Reader");
+                });
+
             modelBuilder.Entity("Library.Data.Entities.Author", b =>
                 {
                     b.Navigation("Books");
+                });
+
+            modelBuilder.Entity("Library.Data.Entities.Book", b =>
+                {
+                    b.Navigation("BookReaders");
+                });
+
+            modelBuilder.Entity("Library.Data.Entities.Reader", b =>
+                {
+                    b.Navigation("BookReaders");
                 });
 #pragma warning restore 612, 618
         }

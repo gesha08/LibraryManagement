@@ -1,0 +1,41 @@
+@model IEnumerable<Library.Web.ViewModels.Reader.ReaderIndexViewModel>
+
+@{
+    ViewData["Title"] = "Readers";
+}
+
+<h1>Readers</h1>
+
+<p>
+    <a asp-action="Create" class="btn btn-primary">Create New Reader</a>
+</p>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>First Name</th>
+            <th>Last Name</th>
+            <th>Email</th>
+            <th>Registration Date</th>
+            <th>Books Borrowed</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var reader in Model)
+        {
+            <tr>
+                <td>@reader.FirstName</td>
+                <td>@reader.LastName</td>
+                <td>@reader.Email</td>
+                <td>@reader.RegistrationDate.ToShortDateString()</td>
+                <td>@reader.BooksBorrowedCount</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@reader.Id">Edit</a> |
+                    <a asp-action="Details" asp-route-id="@reader.Id">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@reader.Id">Delete</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

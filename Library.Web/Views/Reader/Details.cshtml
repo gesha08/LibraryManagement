@@ -1,0 +1,85 @@
+@model Library.Web.ViewModels.Reader.ReaderDetailsViewModel
+
+@{
+    ViewData["Title"] = "Reader Details";
+}
+
+<h1>Reader Details</h1>
+
+<div>
+    <h4>Reader</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">First Name</dt>
+        <dd class="col-sm-10">@Model.FirstName</dd>
+        <dt class="col-sm-2">Last Name</dt>
+        <dd class="col-sm-10">@Model.LastName</dd>
+        <dt class="col-sm-2">Email</dt>
+        <dd class="col-sm-10">@Model.Email</dd>
+        <dt class="col-sm-2">Phone Number</dt>
+        <dd class="col-sm-10">@Model.PhoneNumber</dd>
+        <dt class="col-sm-2">Registration Date</dt>
+        <dd class="col-sm-10">@Model.RegistrationDate.ToShortDateString()</dd>
+    </dl>
+</div>
+
+<div>
+    <h4>Currently Borrowed Books (@Model.BorrowedBooks.Count)</h4>
+    @if (Model.BorrowedBooks.Any())
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Publication Year</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var book in Model.BorrowedBooks)
+                {
+                    <tr>
+                        <td>@book.Title</td>
+                        <td>@book.PublicationYear</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No books currently borrowed.</p>
+    }
+</div>
+
+<div>
+    <h4>Returned Books (@Model.ReturnedBooks.Count)</h4>
+    @if (Model.ReturnedBooks.Any())
+    {
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Publication Year</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var book in Model.ReturnedBooks)
+                {
+                    <tr>
+                        <td>@book.Title</td>
+                        <td>@book.PublicationYear</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p>No returned books.</p>
+    }
+</div>
+
+<div>
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+</div>
