@@ -1,25 +1,23 @@
-using Library.Data;
+using Business.Interfaces;
 using Library.Web.ViewModels.Book;
+using Library.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using Microsoft.EntityFrameworkCore;
 
 namespace Library.Web.Controllers
 {
     public class BookController : Controller
     {
-        private readonly LibraryDbContext context;
+        private readonly IBookService _bookService;
 
-        public BookController(LibraryDbContext context)
+        public BookController(IBookService bookService)
         {
-            this.context = context;
+            _bookService = bookService;
         }
 
         public async Task<IActionResult> Index()
         {
-            var books = await context.Books
-                .Include(b => b.Author)
-                .ToListAsync();
+            var books = await _bookService.GetAllAsync();
 
             var model = new List<BookIndexViewModel>();
 
@@ -41,11 +39,7 @@ namespace Library.Web.Controllers
 
         public async Task<IActionResult> Details(int id)
         {
-            var book = await context.Books
-                .Include(b => b.Author)
-                .Include(b => b.BookReaders)
-                    .ThenInclude(br => br.Reader)
-                .FirstOrDefaultAsync(b => b.Id == id);
+            var book = await _bookService.GetWithDetailsAsync(id);
 
             if (book == null)
             {
@@ -54,10 +48,9 @@ namespace Library.Web.Controllers
 
             var currentBorrow = book.BookReaders.FirstOrDefault(br => br.ReturnedDate == null);
 
-            var availableReaders = await context.Readers
-                .Where(r => !context.BookReaders.Any(br => br.ReaderId == r.Id && br.ReturnedDate == null))
+            var availableReaders = (await _bookService.GetAvailableReadersAsync())
                 .Select(r => new { r.Id, FullName = r.FirstName + " " + r.LastName })
-                .ToListAsync();
+                .ToList();
 
             var model = new BookDetailsViewModel
             {
@@ -82,7 +75,7 @@ namespace Library.Web.Controllers
         public async Task<IActionResult> Create()
         {
             ViewBag.Authors = new SelectList(
-                await context.Authors.ToListAsync(),
+                await _bookService.GetAllAuthorsAsync(),
                 "Id",
                 "FirstName");
 
@@ -92,35 +85,34 @@ namespace Library.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(BookCreateViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var book = new Library.Data.Entities.Book
-                {
-                    Title = model.Title,
-                    Description = model.Description,
-                    ISBN = model.ISBN,
-                    Pages = model.Pages,
-                    PublicationYear = model.PublicationYear,
-                    AuthorId = model.AuthorId
-                };
+                ViewBag.Authors = new SelectList(
+                    await _bookService.GetAllAuthorsAsync(),
+                    "Id",
+                    "FirstName");
 
-                context.Books.Add(book);
-                await context.SaveChangesAsync();
-
-                return RedirectToAction(nameof(Index));
+                return View(model);
             }
 
-            ViewBag.Authors = new SelectList(
-                await context.Authors.ToListAsync(),
-                "Id",
-                "FirstName");
+            var book = new Book
+            {
+                Title = model.Title,
+                Description = model.Description,
+                ISBN = model.ISBN,
+                Pages = model.Pages,
+                PublicationYear = model.PublicationYear,
+                AuthorId = model.AuthorId
+            };
 
-            return View(model);
+            await _bookService.CreateAsync(book);
+
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Edit(int id)
         {
-            var book = await context.Books.FindAsync(id);
+            var book = await _bookService.GetByIdAsync(id);
 
             if (book == null)
             {
@@ -139,7 +131,7 @@ namespace Library.Web.Controllers
             };
 
             ViewBag.Authors = new SelectList(
-                await context.Authors.ToListAsync(),
+                await _bookService.GetAllAuthorsAsync(),
                 "Id",
                 "FirstName");
 
@@ -154,40 +146,38 @@ namespace Library.Web.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var book = await context.Books.FindAsync(id);
+                ViewBag.Authors = new SelectList(
+                    await _bookService.GetAllAuthorsAsync(),
+                    "Id",
+                    "FirstName");
 
-                if (book == null)
-                {
-                    return NotFound();
-                }
-
-                book.Title = model.Title;
-                book.Description = model.Description;
-                book.ISBN = model.ISBN;
-                book.Pages = model.Pages;
-                book.PublicationYear = model.PublicationYear;
-                book.AuthorId = model.AuthorId;
-
-                await context.SaveChangesAsync();
-
-                return RedirectToAction(nameof(Index));
+                return View(model);
             }
 
-            ViewBag.Authors = new SelectList(
-                await context.Authors.ToListAsync(),
-                "Id",
-                "FirstName");
+            var book = await _bookService.GetByIdAsync(id);
 
-            return View(model);
+            if (book == null)
+            {
+                return NotFound();
+            }
+
+            book.Title = model.Title;
+            book.Description = model.Description;
+            book.ISBN = model.ISBN;
+            book.Pages = model.Pages;
+            book.PublicationYear = model.PublicationYear;
+            book.AuthorId = model.AuthorId;
+
+            await _bookService.UpdateAsync(book);
+
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Delete(int id)
         {
-            var book = await context.Books
-                .Include(b => b.Author)
-                .FirstOrDefaultAsync(b => b.Id == id);
+            var book = await _bookService.GetByIdAsync(id);
 
             if (book == null)
             {
@@ -208,12 +198,11 @@ namespace Library.Web.Controllers
         [ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var book = await context.Books.FindAsync(id);
+            var book = await _bookService.GetByIdAsync(id);
 
             if (book != null)
             {
-                context.Books.Remove(book);
-                await context.SaveChangesAsync();
+                await _bookService.DeleteAsync(id);
             }
 
             return RedirectToAction(nameof(Index));
@@ -222,10 +211,7 @@ namespace Library.Web.Controllers
         // Borrow a book
         public async Task<IActionResult> Borrow(int id)
         {
-            var book = await context.Books
-                .Include(b => b.BookReaders)
-                    .ThenInclude(br => br.Reader)
-                .FirstOrDefaultAsync(b => b.Id == id);
+            var book = await _bookService.GetWithDetailsAsync(id);
 
             if (book == null)
             {
@@ -238,10 +224,9 @@ namespace Library.Web.Controllers
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            var availableReaders = await context.Readers
-                .Where(r => !context.BookReaders.Any(br => br.ReaderId == r.Id && br.ReturnedDate == null))
+            var availableReaders = (await _bookService.GetAvailableReadersAsync())
                 .Select(r => new { r.Id, FullName = r.FirstName + " " + r.LastName })
-                .ToListAsync();
+                .ToList();
 
             ViewBag.Book = book;
             ViewBag.Readers = new SelectList(availableReaders, "Id", "FullName");
@@ -252,33 +237,18 @@ namespace Library.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> Borrow(int id, int readerId)
         {
-            var book = await context.Books
-                .Include(b => b.BookReaders)
-                .FirstOrDefaultAsync(b => b.Id == id);
-            var reader = await context.Readers.FindAsync(readerId);
+            var book = await _bookService.GetByIdAsync(id);
+            var isBorrowed = await _bookService.IsBorrowedAsync(id);
 
-            if (book == null || reader == null)
-            {
-                return NotFound();
-            }
-
-            if (book.BookReaders.Any(br => br.ReturnedDate == null))
+            if (book == null || isBorrowed)
             {
                 TempData["Error"] = "This book is already borrowed.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            var borrow = new Library.Data.Entities.BookReader
-            {
-                BookId = book.Id,
-                ReaderId = reader.Id,
-                BorrowedDate = DateTime.Now
-            };
+            await _bookService.BorrowAsync(id, readerId);
 
-            context.BookReaders.Add(borrow);
-            await context.SaveChangesAsync();
-
-            TempData["Success"] = $"Book '{book.Title}' borrowed by {reader.FirstName} {reader.LastName}.";
+            TempData["Success"] = $"Book '{book.Title}' borrowed.";
             return RedirectToAction(nameof(Details), new { id });
         }
 
@@ -286,28 +256,24 @@ namespace Library.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> Return(int id)
         {
-            var book = await context.Books
-                .Include(b => b.BookReaders)
-                    .ThenInclude(br => br.Reader)
-                .FirstOrDefaultAsync(b => b.Id == id);
+            var book = await _bookService.GetByIdAsync(id);
 
             if (book == null)
             {
                 return NotFound();
             }
 
-            var currentBorrow = book.BookReaders.FirstOrDefault(br => br.ReturnedDate == null);
+            var isBorrowed = await _bookService.IsBorrowedAsync(id);
 
-            if (currentBorrow == null)
+            if (!isBorrowed)
             {
                 TempData["Error"] = "This book is not currently borrowed.";
                 return RedirectToAction(nameof(Details), new { id });
             }
 
-            currentBorrow.ReturnedDate = DateTime.Now;
-            await context.SaveChangesAsync();
+            await _bookService.ReturnAsync(id);
 
-            TempData["Success"] = $"Book '{book.Title}' returned by {currentBorrow.Reader.FirstName} {currentBorrow.Reader.LastName}.";
+            TempData["Success"] = $"Book '{book.Title}' returned.";
             return RedirectToAction(nameof(Details), new { id });
         }
     }

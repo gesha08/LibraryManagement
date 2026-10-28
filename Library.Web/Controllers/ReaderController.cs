@@ -1,28 +1,28 @@
-using Library.Data;
+using Business.Interfaces;
 using Library.Web.ViewModels.Reader;
+using Library.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Library.Web.Controllers
 {
     public class ReaderController : Controller
     {
-        private readonly LibraryDbContext context;
+        private readonly IReaderService _readerService;
 
-        public ReaderController(LibraryDbContext context)
+        public ReaderController(IReaderService readerService)
         {
-            this.context = context;
+            _readerService = readerService;
         }
 
         public async Task<IActionResult> Index()
         {
-            var readers = await context.Readers.ToListAsync();
+            var readers = await _readerService.GetAllAsync();
 
             var model = new List<ReaderIndexViewModel>();
 
             foreach (var reader in readers)
             {
-                var borrowedCount = await context.BookReaders.CountAsync(br => br.ReaderId == reader.Id && br.ReturnedDate == null);
+                var borrowedCount = await _readerService.GetBorrowedBookCountAsync(reader.Id);
                 model.Add(new ReaderIndexViewModel
                 {
                     Id = reader.Id,
@@ -39,10 +39,7 @@ namespace Library.Web.Controllers
 
         public async Task<IActionResult> Details(int id)
         {
-            var reader = await context.Readers
-                .Include(r => r.BookReaders)
-                    .ThenInclude(br => br.Book)
-                .FirstOrDefaultAsync(r => r.Id == id);
+            var reader = await _readerService.GetWithBooksAsync(id);
 
             if (reader == null)
             {
@@ -92,29 +89,28 @@ namespace Library.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(ReaderCreateViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var reader = new Library.Data.Entities.Reader
-                {
-                    FirstName = model.FirstName,
-                    LastName = model.LastName,
-                    Email = model.Email,
-                    PhoneNumber = model.PhoneNumber,
-                    RegistrationDate = model.RegistrationDate
-                };
-
-                context.Readers.Add(reader);
-                await context.SaveChangesAsync();
-
-                return RedirectToAction(nameof(Index));
+                return View(model);
             }
 
-            return View(model);
+            var reader = new Reader
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.Email,
+                PhoneNumber = model.PhoneNumber,
+                RegistrationDate = model.RegistrationDate
+            };
+
+            await _readerService.CreateAsync(reader);
+
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Edit(int id)
         {
-            var reader = await context.Readers.FindAsync(id);
+            var reader = await _readerService.GetByIdAsync(id);
 
             if (reader == null)
             {
@@ -142,32 +138,32 @@ namespace Library.Web.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var reader = await context.Readers.FindAsync(id);
-
-                if (reader == null)
-                {
-                    return NotFound();
-                }
-
-                reader.FirstName = model.FirstName;
-                reader.LastName = model.LastName;
-                reader.Email = model.Email;
-                reader.PhoneNumber = model.PhoneNumber;
-                reader.RegistrationDate = model.RegistrationDate;
-
-                await context.SaveChangesAsync();
-
-                return RedirectToAction(nameof(Index));
+                return View(model);
             }
 
-            return View(model);
+            var reader = await _readerService.GetByIdAsync(id);
+
+            if (reader == null)
+            {
+                return NotFound();
+            }
+
+            reader.FirstName = model.FirstName;
+            reader.LastName = model.LastName;
+            reader.Email = model.Email;
+            reader.PhoneNumber = model.PhoneNumber;
+            reader.RegistrationDate = model.RegistrationDate;
+
+            await _readerService.UpdateAsync(reader);
+
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Delete(int id)
         {
-            var reader = await context.Readers.FindAsync(id);
+            var reader = await _readerService.GetByIdAsync(id);
 
             if (reader == null)
             {
@@ -188,13 +184,7 @@ namespace Library.Web.Controllers
         [ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var reader = await context.Readers.FindAsync(id);
-
-            if (reader != null)
-            {
-                context.Readers.Remove(reader);
-                await context.SaveChangesAsync();
-            }
+            await _readerService.DeleteAsync(id);
 
             return RedirectToAction(nameof(Index));
         }

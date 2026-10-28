@@ -1,28 +1,28 @@
-using Library.Data;
+using Business.Interfaces;
 using Library.Web.ViewModels.Author;
+using Library.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace Library.Web.Controllers
 {
     public class AuthorController : Controller
     {
-        private readonly LibraryDbContext context;
+        private readonly IAuthorService _authorService;
 
-        public AuthorController(LibraryDbContext context)
+        public AuthorController(IAuthorService authorService)
         {
-            this.context = context;
+            _authorService = authorService;
         }
 
         public async Task<IActionResult> Index()
         {
-            var authors = await context.Authors.ToListAsync();
+            var authors = await _authorService.GetAllAsync();
 
             var model = new List<AuthorIndexViewModel>();
 
             foreach (var author in authors)
             {
-                var booksCount = await context.Books.CountAsync(b => b.AuthorId == author.Id);
+                var booksCount = await _authorService.GetBookCountByAuthorAsync(author.Id);
                 model.Add(new AuthorIndexViewModel
                 {
                     Id = author.Id,
@@ -38,9 +38,7 @@ namespace Library.Web.Controllers
 
         public async Task<IActionResult> Details(int id)
         {
-            var author = await context.Authors
-                .Include(a => a.Books)
-                .FirstOrDefaultAsync(a => a.Id == id);
+            var author = await _authorService.GetWithBooksAsync(id);
 
             if (author == null)
             {
@@ -73,28 +71,27 @@ namespace Library.Web.Controllers
         [HttpPost]
         public async Task<IActionResult> Create(AuthorCreateViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var author = new Library.Data.Entities.Author
-                {
-                    FirstName = model.FirstName,
-                    LastName = model.LastName,
-                    Biography = model.Biography,
-                    BirthDate = model.BirthDate
-                };
-
-                context.Authors.Add(author);
-                await context.SaveChangesAsync();
-
-                return RedirectToAction(nameof(Index));
+                return View(model);
             }
 
-            return View(model);
+            var author = new Author
+            {
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Biography = model.Biography,
+                BirthDate = model.BirthDate
+            };
+
+            await _authorService.CreateAsync(author);
+
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Edit(int id)
         {
-            var author = await context.Authors.FindAsync(id);
+            var author = await _authorService.GetByIdAsync(id);
 
             if (author == null)
             {
@@ -121,31 +118,31 @@ namespace Library.Web.Controllers
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var author = await context.Authors.FindAsync(id);
-
-                if (author == null)
-                {
-                    return NotFound();
-                }
-
-                author.FirstName = model.FirstName;
-                author.LastName = model.LastName;
-                author.Biography = model.Biography;
-                author.BirthDate = model.BirthDate;
-
-                await context.SaveChangesAsync();
-
-                return RedirectToAction(nameof(Index));
+                return View(model);
             }
 
-            return View(model);
+            var author = await _authorService.GetByIdAsync(id);
+
+            if (author == null)
+            {
+                return NotFound();
+            }
+
+            author.FirstName = model.FirstName;
+            author.LastName = model.LastName;
+            author.Biography = model.Biography;
+            author.BirthDate = model.BirthDate;
+
+            await _authorService.UpdateAsync(author);
+
+            return RedirectToAction(nameof(Index));
         }
 
         public async Task<IActionResult> Delete(int id)
         {
-            var author = await context.Authors.FindAsync(id);
+            var author = await _authorService.GetByIdAsync(id);
 
             if (author == null)
             {
@@ -166,13 +163,7 @@ namespace Library.Web.Controllers
         [ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var author = await context.Authors.FindAsync(id);
-
-            if (author != null)
-            {
-                context.Authors.Remove(author);
-                await context.SaveChangesAsync();
-            }
+            await _authorService.DeleteAsync(id);
 
             return RedirectToAction(nameof(Index));
         }

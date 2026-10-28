@@ -1,3 +1,5 @@
+using Business.Interfaces;
+using Business.Services;
 using Library.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,6 +10,10 @@ builder.Services.AddControllersWithViews();
 builder.Services.AddDbContext<LibraryDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IAuthorService, AuthorService>();
+builder.Services.AddScoped<IBookService, BookService>();
+builder.Services.AddScoped<IReaderService, ReaderService>();
 
 var app = builder.Build();
 
