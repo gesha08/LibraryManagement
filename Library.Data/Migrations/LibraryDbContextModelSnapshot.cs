@@ -50,7 +50,7 @@ namespace Library.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Authors");
+                    b.ToTable("Authors", (string)null);
 
                     b.HasData(
                         new
@@ -115,7 +115,7 @@ namespace Library.Data.Migrations
 
                     b.HasIndex("AuthorId");
 
-                    b.ToTable("Books");
+                    b.ToTable("Books", (string)null);
 
                     b.HasData(
                         new
@@ -178,7 +178,7 @@ namespace Library.Data.Migrations
 
                     b.HasIndex("ReaderId");
 
-                    b.ToTable("BookReaders");
+                    b.ToTable("BookReaders", (string)null);
 
                     b.HasData(
                         new
@@ -248,7 +248,7 @@ namespace Library.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Readers");
+                    b.ToTable("Readers", (string)null);
 
                     b.HasData(
                         new
