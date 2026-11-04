@@ -51,6 +51,32 @@ namespace Library.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Authors");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 101,
+                            Biography = "English novelist, essayist, journalist and critic.",
+                            BirthDate = new DateTime(1903, 6, 25, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FirstName = "George",
+                            LastName = "Orwell"
+                        },
+                        new
+                        {
+                            Id = 102,
+                            Biography = "English novelist known primarily for her six major novels.",
+                            BirthDate = new DateTime(1775, 12, 16, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FirstName = "Jane",
+                            LastName = "Austen"
+                        },
+                        new
+                        {
+                            Id = 103,
+                            Biography = "American author and screenwriter.",
+                            BirthDate = new DateTime(1920, 8, 22, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            FirstName = "Ray",
+                            LastName = "Bradbury"
+                        });
                 });
 
             modelBuilder.Entity("Library.Data.Entities.Book", b =>
@@ -90,6 +116,48 @@ namespace Library.Data.Migrations
                     b.HasIndex("AuthorId");
 
                     b.ToTable("Books");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 101,
+                            AuthorId = 101,
+                            Description = "A dystopian social science fiction novel.",
+                            ISBN = "9780451524935",
+                            Pages = 328,
+                            PublicationYear = 1949,
+                            Title = "1984"
+                        },
+                        new
+                        {
+                            Id = 102,
+                            AuthorId = 102,
+                            Description = "A romantic novel of manners.",
+                            ISBN = "9781503290563",
+                            Pages = 432,
+                            PublicationYear = 1813,
+                            Title = "Pride and Prejudice"
+                        },
+                        new
+                        {
+                            Id = 103,
+                            AuthorId = 103,
+                            Description = "A dystopian novel about censorship.",
+                            ISBN = "9781451673319",
+                            Pages = 249,
+                            PublicationYear = 1953,
+                            Title = "Fahrenheit 451"
+                        },
+                        new
+                        {
+                            Id = 104,
+                            AuthorId = 101,
+                            Description = "A satirical allegorical novella.",
+                            ISBN = "9780451526342",
+                            Pages = 144,
+                            PublicationYear = 1945,
+                            Title = "Animal Farm"
+                        });
                 });
 
             modelBuilder.Entity("Library.Data.Entities.BookReader", b =>
@@ -111,6 +179,40 @@ namespace Library.Data.Migrations
                     b.HasIndex("ReaderId");
 
                     b.ToTable("BookReaders");
+
+                    b.HasData(
+                        new
+                        {
+                            BookId = 101,
+                            ReaderId = 101,
+                            BorrowedDate = new DateTime(2024, 2, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ReturnedDate = new DateTime(2024, 2, 15, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            BookId = 102,
+                            ReaderId = 101,
+                            BorrowedDate = new DateTime(2024, 3, 22, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            BookId = 103,
+                            ReaderId = 102,
+                            BorrowedDate = new DateTime(2024, 4, 5, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            ReturnedDate = new DateTime(2024, 4, 20, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            BookId = 104,
+                            ReaderId = 103,
+                            BorrowedDate = new DateTime(2024, 7, 1, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            BookId = 101,
+                            ReaderId = 103,
+                            BorrowedDate = new DateTime(2024, 8, 10, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        });
                 });
 
             modelBuilder.Entity("Library.Data.Entities.Reader", b =>
@@ -147,6 +249,35 @@ namespace Library.Data.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Readers");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = 101,
+                            Email = "ivan.petrov@example.com",
+                            FirstName = "Ivan",
+                            LastName = "Petrov",
+                            PhoneNumber = "+359888123456",
+                            RegistrationDate = new DateTime(2024, 1, 15, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 102,
+                            Email = "maria.ivanova@example.com",
+                            FirstName = "Maria",
+                            LastName = "Ivanova",
+                            PhoneNumber = "+359888987654",
+                            RegistrationDate = new DateTime(2024, 3, 20, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        },
+                        new
+                        {
+                            Id = 103,
+                            Email = "georgi.dimitrov@example.com",
+                            FirstName = "Georgi",
+                            LastName = "Dimitrov",
+                            PhoneNumber = "+359887111222",
+                            RegistrationDate = new DateTime(2024, 6, 10, 0, 0, 0, 0, DateTimeKind.Unspecified)
+                        });
                 });
 
             modelBuilder.Entity("Library.Data.Entities.Book", b =>
