@@ -4,7 +4,7 @@ namespace Business.Interfaces
 {
     public interface IBookService
     {
-        Task<List<Book>> GetAllAsync();
+        Task<List<Book>> GetAllAsync(string? search = null, string? order = null);
         Task<Book?> GetByIdAsync(int id);
         Task<Book?> GetWithDetailsAsync(int id);
         Task<List<Author>> GetAllAuthorsAsync();

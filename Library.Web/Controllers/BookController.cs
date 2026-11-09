@@ -15,9 +15,9 @@ namespace Library.Web.Controllers
             _bookService = bookService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search, string? sortorder)
         {
-            var books = await _bookService.GetAllAsync();
+            var books = await _bookService.GetAllAsync(search, sortorder);
 
             var model = new List<BookIndexViewModel>();
 
@@ -33,6 +33,9 @@ namespace Library.Web.Controllers
                     AuthorName = book.Author.FirstName + " " + book.Author.LastName
                 });
             }
+
+            ViewBag.Search = search;
+            ViewBag.SortOrder = sortorder;
 
             return View(model);
         }

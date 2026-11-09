@@ -14,10 +14,28 @@ namespace Business.Services
             _context = context;
         }
 
-        public async Task<List<Book>> GetAllAsync() =>
-            await _context.Books
+        public async Task<List<Book>> GetAllAsync(string? search = null, string? order = null)
+        {
+            var query = _context.Books
                 .Include(b => b.Author)
-                .ToListAsync();
+                .AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(b => b.Title.Contains(search));
+            }
+
+            query = order switch
+            {
+                "title" => query.OrderBy(b => b.Title),
+                "title_desc" => query.OrderByDescending(b => b.Title),
+                "year_asc" => query.OrderBy(b => b.PublicationYear),
+                "year_desc" => query.OrderByDescending(b => b.PublicationYear),
+                _ => query.OrderBy(b => b.Title),
+            };
+
+            return await query.ToListAsync();
+        }
 
         public async Task<Book?> GetByIdAsync(int id) =>
             await _context.Books.FindAsync(id);

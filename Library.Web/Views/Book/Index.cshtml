@@ -6,6 +6,25 @@
 
 <h1>Books</h1>
 
+<form asp-controller="Book" asp-action="Index" method="get">
+    <div class="row mb-3">
+        <div class="col-md-4">
+            <input type="text" name="search" value="@ViewBag.Search" class="form-control" placeholder="Search by title..." />
+        </div>
+        <div class="col-md-3">
+            <select name="sortOrder" class="form-control">
+                <option value="title" selected="@(ViewBag.SortOrder == "title")">Title A-Z</option>
+                <option value="title_desc" selected="@(ViewBag.SortOrder == "title_desc")">Title Z-A</option>
+                <option value="year_asc" selected="@(ViewBag.SortOrder == "year_asc")">Year Ascending</option>
+                <option value="year_desc" selected="@(ViewBag.SortOrder == "year_desc")">Year Descending</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex align-items-end">
+            <button type="submit" class="btn btn-primary w-100">Search</button>
+        </div>
+    </div>
+</form>
+
 <p>
     <a asp-action="Create" class="btn btn-primary">Create New Book</a>
 </p>
