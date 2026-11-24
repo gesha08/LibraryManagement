@@ -14,9 +14,10 @@ namespace Library.Web.Controllers
             _authorService = authorService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search)
         {
-            var authors = await _authorService.GetAllAsync();
+            ViewBag.Search = search;
+            var authors = await _authorService.GetAllAsync(search);
 
             var model = new List<AuthorIndexViewModel>();
 
@@ -34,6 +35,29 @@ namespace Library.Web.Controllers
             }
 
             return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Search(string? search)
+        {
+            var authors = await _authorService.GetAllAsync(search);
+
+            var model = new List<AuthorIndexViewModel>();
+
+            foreach (var author in authors)
+            {
+                var booksCount = await _authorService.GetBookCountByAuthorAsync(author.Id);
+                model.Add(new AuthorIndexViewModel
+                {
+                    Id = author.Id,
+                    FirstName = author.FirstName,
+                    LastName = author.LastName,
+                    BirthDate = author.BirthDate,
+                    BooksCount = booksCount
+                });
+            }
+
+            return PartialView("_AuthorRows", model);
         }
 
         public async Task<IActionResult> Details(int id)

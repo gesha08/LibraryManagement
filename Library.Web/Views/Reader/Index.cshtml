@@ -6,6 +6,15 @@
 
 <h1>Readers</h1>
 
+<div class="row mb-3">
+    <div class="col-md-3">
+        <input type="text" id="readerSearch" class="form-control" placeholder="Search by name or email..." value="@ViewBag.Search" />
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="button" id="readerFilterBtn" class="btn btn-primary w-100">Filter</button>
+    </div>
+</div>
+
 <p>
     <a asp-action="Create" class="btn btn-primary">Create New Reader</a>
 </p>
@@ -21,21 +30,27 @@
             <th></th>
         </tr>
     </thead>
-    <tbody>
-        @foreach (var reader in Model)
-        {
-            <tr>
-                <td>@reader.FirstName</td>
-                <td>@reader.LastName</td>
-                <td>@reader.Email</td>
-                <td>@reader.RegistrationDate.ToShortDateString()</td>
-                <td>@reader.BooksBorrowedCount</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@reader.Id">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@reader.Id">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@reader.Id">Delete</a>
-                </td>
-            </tr>
-        }
+    <tbody id="readerRows">
+        @await Html.PartialAsync("_ReaderRows", Model)
     </tbody>
 </table>
+
+@section Scripts {
+    <script>
+        function loadReaderRows() {
+            const search = document.getElementById('readerSearch').value;
+            fetch(`/Reader/Search?search=${encodeURIComponent(search)}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('readerRows').innerHTML = html;
+                })
+                .catch(error => console.error('Error loading readers:', error));
+        }
+
+        document.getElementById('readerFilterBtn').addEventListener('click', loadReaderRows);
+
+        document.getElementById('readerSearch').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') loadReaderRows();
+        });
+    </script>
+}

@@ -1,0 +1,16 @@
+@model IEnumerable<Library.Web.ViewModels.Author.AuthorIndexViewModel>
+
+@foreach (var author in Model)
+{
+    <tr>
+        <td>@author.FirstName</td>
+        <td>@author.LastName</td>
+        <td>@author.BirthDate.ToShortDateString()</td>
+        <td>@author.BooksCount</td>
+        <td>
+            <a asp-action="Edit" asp-route-id="@author.Id">Edit</a> |
+            <a asp-action="Details" asp-route-id="@author.Id">Details</a> |
+            <a asp-action="Delete" asp-route-id="@author.Id">Delete</a>
+        </td>
+    </tr>
+}

@@ -4,7 +4,7 @@ namespace Business.Interfaces
 {
     public interface IAuthorService
     {
-        Task<List<Author>> GetAllAsync();
+        Task<List<Author>> GetAllAsync(string? search = null);
         Task<Author?> GetByIdAsync(int id);
         Task<Author?> GetWithBooksAsync(int id);
         Task<int> GetBookCountByAuthorAsync(int authorId);

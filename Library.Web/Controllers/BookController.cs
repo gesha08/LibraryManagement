@@ -180,7 +180,7 @@ namespace Library.Web.Controllers
 
         public async Task<IActionResult> Delete(int id)
         {
-            var book = await _bookService.GetByIdAsync(id);
+            var book = await _bookService.GetWithDetailsAsync(id);
 
             if (book == null)
             {

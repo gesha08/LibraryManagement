@@ -14,9 +14,10 @@ namespace Library.Web.Controllers
             _readerService = readerService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string? search)
         {
-            var readers = await _readerService.GetAllAsync();
+            ViewBag.Search = search;
+            var readers = await _readerService.GetAllAsync(search);
 
             var model = new List<ReaderIndexViewModel>();
 
@@ -35,6 +36,30 @@ namespace Library.Web.Controllers
             }
 
             return View(model);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Search(string? search)
+        {
+            var readers = await _readerService.GetAllAsync(search);
+
+            var model = new List<ReaderIndexViewModel>();
+
+            foreach (var reader in readers)
+            {
+                var borrowedCount = await _readerService.GetBorrowedBookCountAsync(reader.Id);
+                model.Add(new ReaderIndexViewModel
+                {
+                    Id = reader.Id,
+                    FirstName = reader.FirstName,
+                    LastName = reader.LastName,
+                    Email = reader.Email,
+                    RegistrationDate = reader.RegistrationDate,
+                    BooksBorrowedCount = borrowedCount
+                });
+            }
+
+            return PartialView("_ReaderRows", model);
         }
 
         public async Task<IActionResult> Details(int id)
@@ -184,7 +209,13 @@ namespace Library.Web.Controllers
         [ActionName("Delete")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            await _readerService.DeleteAsync(id);
+            var deleted = await _readerService.DeleteAsync(id);
+
+            if (!deleted)
+            {
+                TempData["Error"] = "Cannot delete this reader because they have not returned all borrowed books.";
+                return RedirectToAction(nameof(Index));
+            }
 
             return RedirectToAction(nameof(Index));
         }

@@ -32,6 +32,7 @@
                 <tr>
                     <th>Title</th>
                     <th>Publication Year</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -40,6 +41,12 @@
                     <tr>
                         <td>@book.Title</td>
                         <td>@book.PublicationYear</td>
+                        <td>
+                            <form asp-controller="Book" asp-action="Return" method="post" style="display:inline">
+                                <input type="hidden" name="id" value="@book.Id" />
+                                <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Mark this book as returned?')">Return</button>
+                            </form>
+                        </td>
                     </tr>
                 }
             </tbody>

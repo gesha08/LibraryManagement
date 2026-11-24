@@ -14,8 +14,19 @@ namespace Business.Services
             _context = context;
         }
 
-        public async Task<List<Author>> GetAllAsync() =>
-            await _context.Authors.ToListAsync();
+        public async Task<List<Author>> GetAllAsync(string? search = null)
+        {
+            var query = _context.Authors.AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(a =>
+                    a.FirstName.Contains(search) ||
+                    a.LastName.Contains(search));
+            }
+
+            return await query.ToListAsync();
+        }
 
         public async Task<Author?> GetByIdAsync(int id) =>
             await _context.Authors.FindAsync(id);

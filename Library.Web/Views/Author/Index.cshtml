@@ -6,6 +6,15 @@
 
 <h1>Authors</h1>
 
+<div class="row mb-3">
+    <div class="col-md-3">
+        <input type="text" id="authorSearch" class="form-control" placeholder="Search by name..." value="@ViewBag.Search" />
+    </div>
+    <div class="col-md-2 d-flex align-items-end">
+        <button type="button" id="authorFilterBtn" class="btn btn-primary w-100">Filter</button>
+    </div>
+</div>
+
 <p>
     <a asp-action="Create" class="btn btn-primary">Create New Author</a>
 </p>
@@ -20,20 +29,27 @@
             <th></th>
         </tr>
     </thead>
-    <tbody>
-        @foreach (var author in Model)
-        {
-            <tr>
-                <td>@author.FirstName</td>
-                <td>@author.LastName</td>
-                <td>@author.BirthDate.ToShortDateString()</td>
-                <td>@author.BooksCount</td>
-                <td>
-                    <a asp-action="Edit" asp-route-id="@author.Id">Edit</a> |
-                    <a asp-action="Details" asp-route-id="@author.Id">Details</a> |
-                    <a asp-action="Delete" asp-route-id="@author.Id">Delete</a>
-                </td>
-            </tr>
-        }
+    <tbody id="authorRows">
+        @await Html.PartialAsync("_AuthorRows", Model)
     </tbody>
 </table>
+
+@section Scripts {
+    <script>
+        function loadAuthorRows() {
+            const search = document.getElementById('authorSearch').value;
+            fetch(`/Author/Search?search=${encodeURIComponent(search)}`)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('authorRows').innerHTML = html;
+                })
+                .catch(error => console.error('Error loading authors:', error));
+        }
+
+        document.getElementById('authorFilterBtn').addEventListener('click', loadAuthorRows);
+
+        document.getElementById('authorSearch').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') loadAuthorRows();
+        });
+    </script>
+}

@@ -14,8 +14,20 @@ namespace Business.Services
             _context = context;
         }
 
-        public async Task<List<Reader>> GetAllAsync() =>
-            await _context.Readers.ToListAsync();
+        public async Task<List<Reader>> GetAllAsync(string? search = null)
+        {
+            var query = _context.Readers.AsQueryable();
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(r =>
+                    r.FirstName.Contains(search) ||
+                    r.LastName.Contains(search) ||
+                    r.Email.Contains(search));
+            }
+
+            return await query.ToListAsync();
+        }
 
         public async Task<Reader?> GetByIdAsync(int id) =>
             await _context.Readers.FindAsync(id);
@@ -42,15 +54,27 @@ namespace Business.Services
             await _context.SaveChangesAsync();
         }
 
-        public async Task DeleteAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
             var reader = await _context.Readers.FindAsync(id);
 
-            if (reader != null)
+            if (reader == null)
             {
-                _context.Readers.Remove(reader);
-                await _context.SaveChangesAsync();
+                return false;
             }
+
+            // Restrict deletion if the reader still has unreturned books.
+            var unreturnedCount = await _context.BookReaders.CountAsync(br =>
+                br.ReaderId == id && br.ReturnedDate == null);
+
+            if (unreturnedCount > 0)
+            {
+                return false;
+            }
+
+            _context.Readers.Remove(reader);
+            await _context.SaveChangesAsync();
+            return true;
         }
 
         public async Task<bool> ReaderExistsAsync(int id) =>
